@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kt-media-tech.com/sitemap.xml

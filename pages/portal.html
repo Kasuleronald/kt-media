@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="language" content="English">
+<meta name="author" content="KT-Media Tech Ltd">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0b1f38">
+<title>My Account — KT-Media Tech</title>
+<meta name="description" content="Customer portal — report issues, track repair tickets, and view your maintenance plan with KT-Media Tech.">
+<meta name="keywords" content="KT-Media Tech account, customer dashboard, ticket tracking, maintenance dashboard, service portal">
+<link rel="canonical" href="https://kt-media-tech.com/pages/portal.html">
+<meta property="og:title" content="My Account — KT-Media Tech">
+<meta property="og:description" content="Customer portal to report issues, track repair tickets, and view maintenance plans.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://kt-media-tech.com/pages/portal.html">
+<meta property="og:image" content="https://kt-media-tech.com/assets/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="My Account — KT-Media Tech">
+<meta name="twitter:description" content="Customer portal to report issues, track repair tickets, and view maintenance plans.">
+<meta name="twitter:image" content="https://kt-media-tech.com/assets/logo.png">
+<link rel="icon" href="../assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="portal-header">
+  <div class="container header-inner">
+    <a href="../index.html" class="brand">
+      <img src="../assets/kt-media-logo-bright.png" alt="KT-Media Tech logo">
+      <span class="brand-text">
+        <span class="t1" style="color:#fff;">KT-MEDIA TECH</span><br>
+        <span class="t2">LTD &nbsp;·&nbsp; PORTAL</span>
+      </span>
+    </a>
+    <div class="portal-user">
+      <div class="avatar" data-user-initial>A</div>
+      <div>
+        <div class="name" data-user-name>—</div>
+        <div class="plan" data-user-plan>—</div>
+      </div>
+    </div>
+    <a href="#" id="logout-btn" class="logout-link">
+      <svg viewBox="0 0 24 24"><path d="M16 13v-2H7V8l-5 4 5 4v-3zM20 3h-9a1 1 0 00-1 1v4h2V5h7v14h-7v-3h-2v4a1 1 0 001 1h9a1 1 0 001-1V4a1 1 0 00-1-1z"/></svg>
+      Log Out
+    </a>
+  </div>
+</header>
+
+<div class="demo-banner" style="border-radius:0; border-left:0; border-right:0; justify-content:center; text-align:center;">
+  <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 5a1.2 1.2 0 110 2.4A1.2 1.2 0 0112 7zm1.5 11h-3v-1.2h.8v-5h-.8V10.5h2.2v6.3h.8z"/></svg>
+  <span><strong>Demo placeholder portal</strong> — account, device and ticket data shown below is sample data for preview purposes, stored only in this browser tab.</span>
+</div>
+
+<div class="dash-wrap">
+  <div class="container dash-grid">
+
+    <!-- SIDEBAR -->
+    <nav class="dash-nav">
+      <button class="active" data-panel="overview">
+        <svg viewBox="0 0 24 24"><path d="M4 13h6V4H4zm0 7h6v-5H4zm8 0h6V11h-6zm0-16v6h6V4z"/></svg>
+        Overview
+      </button>
+      <button data-panel="tickets">
+        <svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 11-3-7.1V2h2v5h-5V5h2.1A8 8 0 1020 12z"/></svg>
+        My Issues / Tickets
+      </button>
+      <button data-panel="new-ticket">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>
+        Report New Issue
+      </button>
+      <button data-panel="devices">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1zm0 2v8h16V6H4zm6 11h4v2h-4z"/></svg>
+        My Devices
+      </button>
+      <button data-panel="subscription">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.1 6.3L22 9.3l-5 4.9 1.2 6.8L12 17.8l-6.2 3.2L7 14.2l-5-4.9 6.9-1z"/></svg>
+        Subscription &amp; Billing
+      </button>
+    </nav>
+
+    <!-- MAIN PANELS -->
+    <div>
+
+      <!-- OVERVIEW -->
+      <div class="dash-panel active" id="panel-overview">
+        <h1 style="font-size:1.7rem; margin-bottom:4px;">Welcome back, <span data-user-name>—</span></h1>
+        <p style="color:var(--grey); margin-bottom:26px;">Here's a quick look at your account with KT-Media Tech.</p>
+
+        <div class="summary-row">
+          <div class="summary-tile"><div class="num" id="summary-open">—</div><div class="lbl">Open Tickets</div></div>
+          <div class="summary-tile"><div class="num" id="summary-total">—</div><div class="lbl">Total Tickets</div></div>
+          <div class="summary-tile"><div class="num" id="summary-devices">—</div><div class="lbl">Registered Devices</div></div>
+        </div>
+
+        <div class="plan-banner">
+          <div>
+            <h3>Current Plan: <span data-user-plan>—</span></h3>
+            <p>Account No. <span data-user-account>—</span> · Next maintenance visit: <strong>Placeholder — 28 Jun 2026</strong></p>
+          </div>
+          <span class="badge" style="color:var(--gold); border-color:rgba(255,255,255,0.3);">Active Subscriber</span>
+        </div>
+
+        <div class="dash-card">
+          <h2>Recent Activity</h2>
+          <p class="sub">Your latest reported issues</p>
+          <div id="ticket-list-preview">
+            <div class="empty-state"><p>Loading...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TICKETS LIST -->
+      <div class="dash-panel" id="panel-tickets">
+        <div class="dash-card">
+          <h2>My Issues / Tickets</h2>
+          <p class="sub">Track every issue you've reported, and its current status.</p>
+          <div id="ticket-list"></div>
+        </div>
+      </div>
+
+      <!-- NEW TICKET FORM -->
+      <div class="dash-panel" id="panel-new-ticket">
+        <div class="dash-card">
+          <h2>Report a New Issue</h2>
+          <p class="sub">Tell us what's wrong — we'll review it and reach out to confirm a repair time.</p>
+
+          <div id="ticket-success" class="hidden" style="background:#eafaf0; border:1px solid #b6e6c6; color:#1b6e3b; padding:14px 18px; margin-bottom:22px; font-size:0.92rem;">
+            Your issue has been logged. Our team will reach out shortly to confirm next steps.
+          </div>
+
+          <form id="ticket-form">
+            <div class="form-row">
+              <div class="form-field">
+                <label for="ticket-device">Which device?</label>
+                <select id="ticket-device" name="device">
+                  <option>HP ProBook 450 G8</option>
+                  <option>Dell Desktop Optiplex</option>
+                  <option>Canon All-in-One Printer</option>
+                  <option>Other / not listed</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="ticket-priority">Priority</label>
+                <select id="ticket-priority" name="priority">
+                  <option>Normal</option>
+                  <option>Urgent — affecting work today</option>
+                  <option>Low — whenever convenient</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-field">
+              <label for="ticket-title-input">Issue Title</label>
+              <input type="text" id="ticket-title-input" name="title" placeholder="e.g. Laptop screen flickering" required>
+            </div>
+            <div class="form-field">
+              <label for="ticket-desc">Describe the Issue</label>
+              <textarea id="ticket-desc" name="description" rows="5" placeholder="What happens, and when did it start?"></textarea>
+            </div>
+            <button type="submit" class="btn btn-navy">Submit Issue</button>
+            <p class="form-note">This demo logs the ticket in your browser only. On the live site this would notify our support team directly.</p>
+          </form>
+        </div>
+      </div>
+
+      <!-- DEVICES -->
+      <div class="dash-panel" id="panel-devices">
+        <div class="dash-card">
+          <h2>My Devices</h2>
+          <p class="sub">Devices registered under your account or maintenance plan.</p>
+          <div id="device-list"></div>
+        </div>
+      </div>
+
+      <!-- SUBSCRIPTION / BILLING (placeholder section) -->
+      <div class="dash-panel" id="panel-subscription">
+        <div class="dash-card">
+          <h2>Subscription &amp; Billing</h2>
+          <p class="sub">Placeholder section — billing history and online payment are not yet active.</p>
+
+          <div class="plan-banner">
+            <div>
+              <h3><span data-user-plan>—</span></h3>
+              <p>Covers up to 10 devices · Bi-weekly maintenance visits · Priority repair booking</p>
+            </div>
+            <span class="badge" style="color:var(--gold); border-color:rgba(255,255,255,0.3);">UGX 250,000 / month</span>
+          </div>
+
+          <h3 style="font-size:1.05rem; margin-bottom:14px;">Billing History (placeholder)</h3>
+          <div class="table-wrap" style="margin-bottom:24px;">
+            <table class="price-table">
+              <thead><tr><th>Invoice</th><th>Date</th><th>Status</th><th>Amount</th></tr></thead>
+              <tbody>
+                <tr><td>INV-0612</td><td>01 Jun 2026</td><td><span class="status-pill status-resolved">Paid</span></td><td class="amount">UGX 250,000</td></tr>
+                <tr><td>INV-0511</td><td>01 May 2026</td><td><span class="status-pill status-resolved">Paid</span></td><td class="amount">UGX 250,000</td></tr>
+                <tr><td>INV-0413</td><td>01 Apr 2026</td><td><span class="status-pill status-resolved">Paid</span></td><td class="amount">UGX 250,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="form-note">Online invoice download and payment will be added here once the billing system is connected. For now, contact us directly for receipts or to change your plan.</p>
+          <a href="contact.html" class="btn btn-outline" style="border-color:var(--navy); color:var(--navy); margin-top:10px;">Contact Us About My Plan</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container footer-bottom" style="border-top:none;">
+    <span>&copy; <span data-year></span> KT-Media Tech. All rights reserved.</span>
+    <span><a href="../index.html">Back to Main Site</a></span>
+  </div>
+</footer>
+
+<script src="../assets/site-config.js"></script>
+<script src="../assets/main.js"></script>
+<script>
+  // mirror the latest 3 tickets into the overview preview panel
+  document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
+      var full = document.querySelector('#ticket-list');
+      var preview = document.querySelector('#ticket-list-preview');
+      if (full && preview) {
+        var rows = full.querySelectorAll('.ticket-row');
+        if (rows.length === 0) {
+          preview.innerHTML = full.innerHTML;
+        } else {
+          preview.innerHTML = '';
+          rows.forEach(function (row, i) {
+            if (i < 3) preview.appendChild(row.cloneNode(true));
+          });
+        }
+      }
+    }, 50);
+  });
+</script>
+</body>
+</html>
