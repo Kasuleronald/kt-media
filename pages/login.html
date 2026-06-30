@@ -76,13 +76,13 @@
 
     <div class="demo-banner">
       <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 5a1.2 1.2 0 110 2.4A1.2 1.2 0 0112 7zm1.5 11h-3v-1.2h.8v-5h-.8V10.5h2.2v6.3h.8z"/></svg>
-      <span><strong>Demo placeholder:</strong> this portal is a front-end preview only. Enter any email and password to explore it — nothing is actually stored or verified yet.</span>
+      <span><strong>Development preview:</strong> accounts and tickets are saved in this browser only (no real server yet). Try test account <strong>test@ktmedia.com</strong> / <strong>test1234</strong>, or <strong>corporate@ktmedia.com</strong> / <strong>corp1234</strong>, or create your own below.</span>
     </div>
 
     <form id="login-form" novalidate>
       <div class="form-field">
-        <label for="login-email">Email or Account Number</label>
-        <input type="text" id="login-email" name="email" placeholder="you@example.com or KT-00231">
+        <label for="login-email">Email</label>
+        <input type="text" id="login-email" name="email" placeholder="test@ktmedia.com">
       </div>
       <div class="form-field">
         <label for="login-password">Password</label>
@@ -92,8 +92,32 @@
       <button type="submit" class="btn btn-gold btn-block">Log In to My Account</button>
     </form>
 
+    <form id="signup-form" novalidate style="display:none;">
+      <div class="form-field">
+        <label for="signup-name">Full Name</label>
+        <input type="text" id="signup-name" name="name" placeholder="Your name">
+      </div>
+      <div class="form-field">
+        <label for="signup-email">Email</label>
+        <input type="email" id="signup-email" name="email" placeholder="you@example.com">
+      </div>
+      <div class="form-field">
+        <label for="signup-password">Password</label>
+        <input type="password" id="signup-password" name="password" placeholder="Create a password">
+      </div>
+      <div class="form-field">
+        <label for="signup-org">Organization (optional)</label>
+        <input type="text" id="signup-org" name="organization" placeholder="School, NGO, company...">
+      </div>
+      <p id="signup-error" class="error-text">Please fill in your name, email and password.</p>
+      <button type="submit" class="btn btn-gold btn-block">Create Test Account</button>
+    </form>
+
     <div class="login-foot">
-      Not a subscriber yet? <a href="contact.html">Ask us about a maintenance plan</a>
+      <a href="#" id="show-signup">New here? Create a free test account</a>
+    </div>
+    <div class="login-foot">
+      Want this on a real server? <a href="contact.html">Ask us about a maintenance plan</a>
     </div>
   </div>
 </div>
@@ -114,13 +138,18 @@
         <li><a href="about.html">About Us</a></li>
         <li><a href="shop.html">Shop</a></li>
         <li><a href="services.html">Services</a></li>
+        <li><a href="corporate.html">Corporate &amp; Bulk</a></li>
+        <li><a href="trade-in.html">Trade-In Program</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Support</h4>
       <ul>
         <li><a href="repairs.html">Repairs &amp; Maintenance</a></li>
+        <li><a href="warranty.html">Warranty &amp; Policy</a></li>
         <li><a href="faq.html">FAQs</a></li>
+        <li><a href="testimonials.html">Reviews</a></li>
+        <li><a href="blog.html">Tips &amp; Guides</a></li>
         <li><a href="contact.html">Contact Us</a></li>
         <li><a href="login.html">Customer Portal</a></li>
       </ul>

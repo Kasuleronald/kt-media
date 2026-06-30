@@ -606,6 +606,10 @@ document.addEventListener('DOMContentLoaded', function () {
           var totalItems = this.items.reduce(function(sum, item) { return sum + (item.qty || 1); }, 0);
           badge.textContent = totalItems;
         }
+        var pill = floatingCart.querySelector('.cart-total-pill');
+        if (pill) {
+          pill.textContent = 'UGX ' + this.getTotal().toLocaleString();
+        }
       }
     }
   };
@@ -616,6 +620,7 @@ document.addEventListener('DOMContentLoaded', function () {
     floatingCartHTML.className = 'floating-cart';
     floatingCartHTML.style.display = 'none';
     floatingCartHTML.innerHTML = 
+      '<span class="cart-total-pill"></span>' +
       '<button class="cart-float-btn" aria-label="Open cart" title="View cart">' +
         '<svg viewBox="0 0 24 24"><path d="M7 4h10v3H7zM5 9h14l-1.5 9h-11z"/></svg>' +
         '<span class="cart-badge">0</span>' +
@@ -712,7 +717,22 @@ document.addEventListener('DOMContentLoaded', function () {
             '<label for="customer-notes">Special Requests</label>' +
             '<textarea id="customer-notes" rows="3" placeholder="Any special requirements?"></textarea>' +
           '</div>' +
-          '<button type="submit" class="btn btn-gold btn-block">Submit Order</button>' +
+          '<div class="form-group">' +
+            '<label for="payment-method">Payment Method</label>' +
+            '<select id="payment-method">' +
+              '<option value="pickup">Pay on Pickup / Delivery (Cash)</option>' +
+              '<option value="momo">Mobile Money (MTN / Airtel)</option>' +
+              '<option value="bank">Bank Transfer</option>' +
+              '<option value="invoice">Invoice (Corporate / NGO accounts)</option>' +
+            '</select>' +
+          '</div>' +
+          '<div id="momo-instructions" class="delivery-hint" style="display:none; background:#fff8e1; border:1px solid #f0c419; padding:12px 14px; border-radius:8px; margin:-6px 0 18px;">' +
+            'Send payment to <strong>MTN MoMo / Airtel Money: +256702493682</strong> (Name: KT-Media Tech Ltd) using the order reference shown after you submit, then forward the confirmation SMS on WhatsApp. Your order is only processed once payment is confirmed.' +
+          '</div>' +
+          '<div class="modal-actions" style="display:flex; gap:10px; flex-wrap:wrap;">' +
+            '<button type="submit" class="btn btn-gold" style="flex:1;">Submit Order via WhatsApp</button>' +
+            '<button type="button" id="download-quote-btn" class="btn btn-outline" style="flex:1; color:var(--navy-deep); border-color:var(--navy-deep);">Download Quote (PDF)</button>' +
+          '</div>' +
         '</form>' +
       '</div>';
     document.body.appendChild(checkoutModal);
@@ -1128,6 +1148,98 @@ document.addEventListener('DOMContentLoaded', function () {
     updateDeliveryHint();
   }
 
+  // Payment method: show/hide mobile money instructions
+  var paymentMethod = document.querySelector('#payment-method');
+  var momoBox = document.querySelector('#momo-instructions');
+  if (paymentMethod && momoBox) {
+    paymentMethod.addEventListener('change', function () {
+      momoBox.style.display = (paymentMethod.value === 'momo') ? 'block' : 'none';
+    });
+  }
+
+  // Generates a short human-friendly order reference, e.g. KT-7G3F91
+  function getOrderRef() {
+    var existing = sessionStorage.getItem('kt_order_ref');
+    if (existing) return existing;
+    var ref = 'KT-' + Date.now().toString(36).toUpperCase().slice(-6);
+    sessionStorage.setItem('kt_order_ref', ref);
+    return ref;
+  }
+
+  function paymentLabel(value) {
+    return value === 'momo' ? 'Mobile Money (MTN/Airtel)' :
+           value === 'bank' ? 'Bank Transfer' :
+           value === 'invoice' ? 'Invoice (Corporate/NGO)' : 'Pay on Pickup/Delivery';
+  }
+
+  // Download Quote (PDF) — loads jsPDF from CDN on demand, builds a simple quote document
+  var downloadQuoteBtn = document.querySelector('#download-quote-btn');
+  if (downloadQuoteBtn) {
+    downloadQuoteBtn.addEventListener('click', function () {
+      if (!cart.items.length) { ktToast('Your cart is empty — add a product first.', 'error'); return; }
+
+      function buildPdf() {
+        var jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : null;
+        if (!jsPDFCtor) { ktToast('Could not load PDF generator — check your internet connection and try again.', 'error'); return; }
+
+        var ref = getOrderRef();
+        var doc = new jsPDFCtor();
+        var name = (document.querySelector('#customer-name') || {}).value || '';
+        var phone = (document.querySelector('#customer-phone') || {}).value || '';
+        var business = (document.querySelector('#customer-business') || {}).value || '';
+        var payment = paymentLabel((document.querySelector('#payment-method') || {}).value || 'pickup');
+
+        doc.setFontSize(16);
+        doc.text('KT-Media Tech Ltd — Quotation', 14, 18);
+        doc.setFontSize(10);
+        doc.text('Luwum Street, Master Building Shop L-21, Kampala, Uganda', 14, 25);
+        doc.text('Tel: +256702493682', 14, 30);
+        doc.text('Reference: ' + ref + '   |   Date: ' + new Date().toLocaleDateString(), 14, 36);
+
+        var y = 48;
+        if (name) { doc.text('Customer: ' + name + (business ? ' (' + business + ')' : ''), 14, y); y += 6; }
+        if (phone) { doc.text('Phone: ' + phone, 14, y); y += 6; }
+        doc.text('Payment method: ' + payment, 14, y); y += 10;
+
+        doc.setFontSize(11);
+        doc.text('Item', 14, y);
+        doc.text('Qty', 130, y);
+        doc.text('Price', 150, y);
+        y += 4;
+        doc.line(14, y, 196, y);
+        y += 6;
+        doc.setFontSize(10);
+        cart.items.forEach(function (item) {
+          doc.text(String(item.title).slice(0, 55), 14, y);
+          doc.text(String(item.qty || 1), 130, y);
+          doc.text(String(item.price), 150, y);
+          y += 7;
+        });
+        y += 4;
+        doc.line(14, y, 196, y);
+        y += 8;
+        doc.setFontSize(12);
+        doc.text('Total: UGX ' + cart.getTotal().toLocaleString(), 14, y);
+        y += 14;
+        doc.setFontSize(9);
+        doc.text('This is a quotation, not a tax invoice. Prices confirmed at checkout/in-store. Valid 7 days from date above.', 14, y);
+
+        doc.save('KT-Media-Tech-Quote-' + ref + '.pdf');
+        trackEvent('download_quote_pdf', { ref: ref, total: cart.getTotal() });
+      }
+
+      if (window.jspdf && window.jspdf.jsPDF) {
+        buildPdf();
+      } else {
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.onload = buildPdf;
+        script.onerror = function () { ktToast('Could not load PDF generator — check your internet connection and try again.', 'error'); };
+        document.head.appendChild(script);
+      }
+    });
+  }
+
   // Checkout form submission
   var checkoutForm = document.querySelector('#checkout-form-v2');
   if (checkoutForm) {
@@ -1141,9 +1253,11 @@ document.addEventListener('DOMContentLoaded', function () {
       var address = document.querySelector('#customer-address').value.trim();
       var notes = document.querySelector('#customer-notes').value.trim();
       var delivery = (document.querySelector('#delivery-method') || {}).value || 'pickup';
+      var payment = (document.querySelector('#payment-method') || {}).value || 'pickup';
+      var ref = getOrderRef();
       
       if (!name || !phone) {
-        alert('Name and phone are required.');
+        ktToast('Name and phone are required.', 'error');
         return;
       }
       
@@ -1155,6 +1269,7 @@ document.addEventListener('DOMContentLoaded', function () {
       
       var msg = [
         '🛒 *NEW ORDER from KT-Media Tech Website*',
+        'Ref: ' + ref,
         '',
         '*Customer:*',
         name + ' | ' + phone,
@@ -1162,6 +1277,7 @@ document.addEventListener('DOMContentLoaded', function () {
         business ? 'Org: ' + business : '',
         address ? 'Location: ' + address : '',
         'Delivery: ' + (delivery === 'pickup' ? 'Store Pickup' : (delivery === 'kampala' ? 'Kampala Delivery' : 'Upcountry Delivery')),
+        'Payment: ' + paymentLabel(payment),
         '',
         '*Items:*',
         cartSummary,
@@ -1172,12 +1288,14 @@ document.addEventListener('DOMContentLoaded', function () {
       
       window.open('https://wa.me/256702493682?text=' + encodeURIComponent(msg), '_blank', 'noopener');
       sendCRMLead('order_submit', {
+        orderRef: ref,
         customerName: name,
         customerPhone: phone,
         customerEmail: email,
         organization: business,
         address: address,
         delivery: delivery,
+        paymentMethod: payment,
         notes: notes,
         items: cart.items,
         total: total
@@ -1185,8 +1303,9 @@ document.addEventListener('DOMContentLoaded', function () {
       
       cart.clear();
       checkoutForm.reset();
+      sessionStorage.removeItem('kt_order_ref');
       closeModal(document.querySelector('#checkout-modal-v2'));
-      alert('Order sent! Our team will contact you soon.');
+      ktToast('Order sent! Reference ' + ref + '. Our team will contact you soon.');
       cart.updateFloatingCart();
       trackEvent('submit_order', { items: cartSummary.split('\n').length, total: total, delivery: delivery });
     });
@@ -1314,24 +1433,103 @@ document.addEventListener('DOMContentLoaded', function () {
      Replace this entire block when wiring up a real backend.
      ========================================================= */
 
-  var DEMO_USER = {
-    name: 'Patricia Namuli',
-    email: 'demo@ktmediatech.ug',
-    plan: 'Office Plan',
-    accountNo: 'KT-00231'
-  };
+  /* =========================================================
+     CUSTOMER PORTAL — LOCAL MOCK BACKEND (for development)
+     No real server. Accounts, devices and tickets are stored
+     in this browser's localStorage under 'kt_mock_users', so
+     data survives reloads and new tabs (not just one session).
+     Swap this block out once a real backend is connected.
+     ========================================================= */
 
-  var DEMO_DEVICES = [
-    { name: 'HP ProBook 450 G8', tag: 'Laptop · Office #1', status: 'Active' },
-    { name: 'Dell Desktop Optiplex', tag: 'Desktop · Reception', status: 'Active' },
-    { name: 'Canon All-in-One Printer', tag: 'Printer · Office #1', status: 'Under maintenance plan' }
-  ];
+  function ktReadUsers() {
+    try { return JSON.parse(localStorage.getItem('kt_mock_users')) || null; }
+    catch (e) { return null; }
+  }
+  function ktSaveUsers(users) { localStorage.setItem('kt_mock_users', JSON.stringify(users)); }
 
-  var DEMO_TICKETS_SEED = [
-    { id: 'TCK-1042', title: 'Laptop overheating after 20 minutes', device: 'HP ProBook 450 G8', status: 'progress', date: '18 Jun 2026' },
-    { id: 'TCK-1038', title: 'Printer not connecting to WiFi', device: 'Canon All-in-One Printer', status: 'resolved', date: '09 Jun 2026' },
-    { id: 'TCK-1031', title: 'Desktop won\u2019t boot after power cut', device: 'Dell Desktop Optiplex', status: 'resolved', date: '02 Jun 2026' }
-  ];
+  function ktSeedUsers() {
+    if (ktReadUsers()) return;
+    var users = [
+      {
+        id: 'u1', email: 'test@ktmedia.com', password: 'test1234',
+        name: 'Maria K.', accountNo: 'KT-00231', plan: 'Standard Care Plan', organization: '',
+        devices: [
+          { name: 'HP ProBook 450 G8', tag: 'Laptop · Personal', status: 'Active', purchaseDate: '2025-09-12', warrantyMonths: 12 },
+          { name: 'Dell Desktop Optiplex', tag: 'Desktop · Home Office', status: 'Active', purchaseDate: '2025-03-04', warrantyMonths: 12 },
+          { name: 'Canon All-in-One Printer', tag: 'Printer · Home Office', status: 'Under maintenance plan', purchaseDate: '2024-11-20', warrantyMonths: 6 }
+        ],
+        tickets: [
+          { id: 'TCK-1042', title: 'Laptop overheating after 20 minutes', device: 'HP ProBook 450 G8', status: 'progress', date: '18 Jun 2026' },
+          { id: 'TCK-1038', title: 'Printer not connecting to WiFi', device: 'Canon All-in-One Printer', status: 'resolved', date: '09 Jun 2026' },
+          { id: 'TCK-1031', title: 'Desktop won\u2019t boot after power cut', device: 'Dell Desktop Optiplex', status: 'resolved', date: '02 Jun 2026' }
+        ]
+      },
+      {
+        id: 'u2', email: 'corporate@ktmedia.com', password: 'corp1234',
+        name: 'IT Admin', accountNo: 'KT-CORP-04', plan: 'Corporate Maintenance Plan', organization: 'Kampala Junior School',
+        devices: [
+          { name: 'Lab Desktops (x20)', tag: 'Desktop · Computer Lab', status: 'Active', purchaseDate: '2025-01-15', warrantyMonths: 12 },
+          { name: 'Staffroom Laptops (x5)', tag: 'Laptop · Staff', status: 'Active', purchaseDate: '2025-06-02', warrantyMonths: 12 },
+          { name: 'Office CCTV Kit', tag: 'Security · Admin Block', status: 'Active', purchaseDate: '2025-02-10', warrantyMonths: 12 }
+        ],
+        tickets: [
+          { id: 'TCK-2011', title: '3 lab desktops not powering on', device: 'Lab Desktops (x20)', status: 'open', date: '24 Jun 2026' },
+          { id: 'TCK-2005', title: 'CCTV recording gap overnight', device: 'Office CCTV Kit', status: 'resolved', date: '14 Jun 2026' }
+        ]
+      }
+    ];
+    ktSaveUsers(users);
+  }
+  ktSeedUsers();
+
+  function ktFindUser(email, password) {
+    var users = ktReadUsers() || [];
+    email = (email || '').trim().toLowerCase();
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].email.toLowerCase() === email && users[i].password === password) return users[i];
+    }
+    return null;
+  }
+  function ktEmailTaken(email) {
+    var users = ktReadUsers() || [];
+    email = (email || '').trim().toLowerCase();
+    return users.some(function (u) { return u.email.toLowerCase() === email; });
+  }
+  function ktGetSessionUser() {
+    var id = localStorage.getItem('kt_session_user');
+    if (!id) return null;
+    var users = ktReadUsers() || [];
+    var match = null;
+    users.forEach(function (u) { if (u.id === id) match = u; });
+    return match;
+  }
+  function ktUpdateUser(updatedUser) {
+    var users = ktReadUsers() || [];
+    var next = users.map(function (u) { return u.id === updatedUser.id ? updatedUser : u; });
+    ktSaveUsers(next);
+  }
+
+  // Small inline toast so portal/login feedback doesn't rely on blocking alert() boxes
+  function ktToast(message, tone) {
+    var host = document.querySelector('#kt-toast-host');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'kt-toast-host';
+      host.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:8px; align-items:center; width:100%; padding:0 16px; pointer-events:none;';
+      document.body.appendChild(host);
+    }
+    var el = document.createElement('div');
+    el.textContent = message;
+    el.style.cssText = 'pointer-events:auto; max-width:420px; background:' + (tone === 'error' ? '#5c1d1d' : '#0b1f38') + '; color:#fff; padding:12px 18px; border-radius:8px; font-size:0.9rem; box-shadow:0 12px 30px rgba(0,0,0,0.25); opacity:0; transition:opacity .25s ease, transform .25s ease; transform:translateY(8px);';
+    host.appendChild(el);
+    requestAnimationFrame(function () { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; });
+    setTimeout(function () {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(8px)';
+      setTimeout(function () { el.remove(); }, 250);
+    }, 3200);
+  }
+  window.ktToast = ktToast;
 
   // ---- LOGIN PAGE ----
   var loginForm = document.querySelector('#login-form');
@@ -1339,22 +1537,77 @@ document.addEventListener('DOMContentLoaded', function () {
     var loginError = document.querySelector('#login-error');
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      // DEMO: any non-empty email + password logs in.
       var email = document.querySelector('#login-email').value.trim();
       var pass = document.querySelector('#login-password').value.trim();
       if (!email || !pass) {
-        if (loginError) loginError.classList.add('show');
+        if (loginError) { loginError.textContent = 'Please enter both an email and a password.'; loginError.classList.add('show'); }
         return;
       }
-      sessionStorage.setItem('pt_demo_logged_in', '1');
+      var user = ktFindUser(email, pass);
+      if (!user) {
+        if (loginError) {
+          loginError.textContent = 'No match for that email/password. Try test@ktmedia.com / test1234, or sign up below.';
+          loginError.classList.add('show');
+        }
+        return;
+      }
+      localStorage.setItem('kt_session_user', user.id);
       window.location.href = 'portal.html';
+    });
+  }
+
+  // ---- SIGN-UP (creates a new local test account) ----
+  var signupForm = document.querySelector('#signup-form');
+  if (signupForm) {
+    var signupError = document.querySelector('#signup-error');
+    signupForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = document.querySelector('#signup-name').value.trim();
+      var email = document.querySelector('#signup-email').value.trim();
+      var pass = document.querySelector('#signup-password').value.trim();
+      var org = (document.querySelector('#signup-org') || {}).value || '';
+      if (!name || !email || !pass) {
+        if (signupError) { signupError.textContent = 'Name, email and password are all required.'; signupError.classList.add('show'); }
+        return;
+      }
+      if (ktEmailTaken(email)) {
+        if (signupError) { signupError.textContent = 'That email already has a test account — try logging in instead.'; signupError.classList.add('show'); }
+        return;
+      }
+      var users = ktReadUsers() || [];
+      var newUser = {
+        id: 'u' + Date.now().toString(36),
+        email: email, password: pass, name: name,
+        accountNo: 'KT-' + Math.floor(10000 + Math.random() * 89999),
+        plan: 'No active plan yet', organization: org,
+        devices: [],
+        tickets: []
+      };
+      users.push(newUser);
+      ktSaveUsers(users);
+      localStorage.setItem('kt_session_user', newUser.id);
+      window.location.href = 'portal.html';
+    });
+  }
+
+  var signupToggle = document.querySelector('#show-signup');
+  var loginCardForm = document.querySelector('#login-form');
+  var signupCardForm = document.querySelector('#signup-form');
+  if (signupToggle && loginCardForm && signupCardForm) {
+    signupToggle.addEventListener('click', function (e) {
+      e.preventDefault();
+      var showingSignup = signupCardForm.style.display === 'block';
+      signupCardForm.style.display = showingSignup ? 'none' : 'block';
+      loginCardForm.style.display = showingSignup ? 'block' : 'none';
+      signupToggle.textContent = showingSignup ? 'New here? Create a free test account' : 'Already have an account? Log in';
     });
   }
 
   // ---- PORTAL DASHBOARD PAGE ----
   var dashWrap = document.querySelector('.dash-wrap');
   if (dashWrap) {
-    if (sessionStorage.getItem('pt_demo_logged_in') !== '1') {
+    var sessionUser = ktGetSessionUser();
+    if (!sessionUser) {
       window.location.href = 'login.html';
       return;
     }
@@ -1371,16 +1624,30 @@ document.addEventListener('DOMContentLoaded', function () {
       return ['open', 'progress', 'resolved'].indexOf(status) === -1 ? 'open' : status;
     }
 
-    // Seed tickets into sessionStorage on first visit this session
-    if (!sessionStorage.getItem('pt_demo_tickets')) {
-      sessionStorage.setItem('pt_demo_tickets', JSON.stringify(DEMO_TICKETS_SEED));
+    function timeGreeting() {
+      var h = new Date().getHours();
+      if (h < 12) return 'Good morning';
+      if (h < 17) return 'Good afternoon';
+      return 'Good evening';
+    }
+
+    function daysUntil(dateStr, months) {
+      if (!dateStr) return null;
+      var start = new Date(dateStr);
+      var end = new Date(start);
+      end.setMonth(end.getMonth() + (months || 12));
+      var diffMs = end - new Date();
+      return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
     }
 
     // Fill user info placeholders
-    document.querySelectorAll('[data-user-name]').forEach(function (el) { el.textContent = DEMO_USER.name; });
-    document.querySelectorAll('[data-user-plan]').forEach(function (el) { el.textContent = DEMO_USER.plan; });
-    document.querySelectorAll('[data-user-account]').forEach(function (el) { el.textContent = DEMO_USER.accountNo; });
-    document.querySelectorAll('[data-user-initial]').forEach(function (el) { el.textContent = DEMO_USER.name.charAt(0); });
+    var displayName = sessionUser.organization ? sessionUser.name + ' · ' + sessionUser.organization : sessionUser.name;
+    document.querySelectorAll('[data-user-name]').forEach(function (el) { el.textContent = timeGreeting() + ', ' + sessionUser.name.split(' ')[0]; });
+    document.querySelectorAll('[data-user-plan]').forEach(function (el) { el.textContent = sessionUser.plan; });
+    document.querySelectorAll('[data-user-account]').forEach(function (el) { el.textContent = sessionUser.accountNo; });
+    document.querySelectorAll('[data-user-initial]').forEach(function (el) { el.textContent = sessionUser.name.charAt(0); });
+    var nameLine = document.querySelector('.portal-user .name');
+    if (nameLine) nameLine.textContent = displayName;
 
     var dashNav = document.querySelector('.dash-nav');
     var dashPanelsHost = document.querySelector('.dash-grid > div');
@@ -1487,41 +1754,63 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     renderConversionDashboard();
 
-    // Render devices
-    var deviceList = document.querySelector('#device-list');
-    if (deviceList) {
-      deviceList.innerHTML = '';
-      DEMO_DEVICES.forEach(function (d) {
-        var row = document.createElement('div');
-        row.className = 'device-row';
-        var main = document.createElement('div');
-        appendText(main, 'div', 'device-name', d.name);
-        appendText(main, 'div', 'device-meta', d.tag);
-        row.appendChild(main);
-        appendText(row, 'span', 'badge', d.status);
-        deviceList.appendChild(row);
-      });
+    // Render devices (from this user's own record, with a live warranty countdown)
+    function renderDevices() {
+      var deviceList = document.querySelector('#device-list');
+      if (deviceList) {
+        deviceList.innerHTML = '';
+        if (!sessionUser.devices.length) {
+          deviceList.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg><p>No devices registered yet — ask us to add one next time you visit or message us.</p></div>';
+        }
+        sessionUser.devices.forEach(function (d) {
+          var row = document.createElement('div');
+          row.className = 'device-row';
+          var main = document.createElement('div');
+          appendText(main, 'div', 'device-name', d.name);
+          var metaText = d.tag;
+          var left = daysUntil(d.purchaseDate, d.warrantyMonths);
+          if (left !== null) {
+            metaText += left > 0 ? ' · warranty ends in ' + left + ' days' : ' · warranty expired';
+          }
+          appendText(main, 'div', 'device-meta', metaText);
+          row.appendChild(main);
+          appendText(row, 'span', 'badge', d.status);
+          deviceList.appendChild(row);
+        });
+      }
+      var deviceCount = document.querySelector('#summary-devices');
+      if (deviceCount) deviceCount.textContent = sessionUser.devices.length;
+
+      // Keep the "Which device?" select on the new-ticket form in sync with this user's real devices
+      var deviceSelect = document.querySelector('#ticket-device');
+      if (deviceSelect) {
+        deviceSelect.innerHTML = '';
+        sessionUser.devices.forEach(function (d) {
+          var opt = document.createElement('option');
+          opt.textContent = d.name;
+          deviceSelect.appendChild(opt);
+        });
+        var otherOpt = document.createElement('option');
+        otherOpt.textContent = 'Other / not listed';
+        deviceSelect.appendChild(otherOpt);
+      }
     }
-    var deviceCount = document.querySelector('#summary-devices');
-    if (deviceCount) deviceCount.textContent = DEMO_DEVICES.length;
+    renderDevices();
 
     // Render tickets
     function renderTickets() {
-      var tickets = JSON.parse(sessionStorage.getItem('pt_demo_tickets') || '[]');
+      var tickets = sessionUser.tickets || [];
       var list = document.querySelector('#ticket-list');
+      var preview = document.querySelector('#ticket-list-preview');
       var openCount = tickets.filter(function (t) { return t.status !== 'resolved'; }).length;
       var openEl = document.querySelector('#summary-open');
       if (openEl) openEl.textContent = openCount;
       var totalEl = document.querySelector('#summary-total');
       if (totalEl) totalEl.textContent = tickets.length;
-      if (!list) return;
-      if (!tickets.length) {
-        list.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg><p>No issues reported yet.</p></div>';
-        return;
-      }
+
       var statusLabel = { open: 'Open', progress: 'In Progress', resolved: 'Resolved' };
-      list.innerHTML = '';
-      tickets.forEach(function (t) {
+
+      function buildRow(t) {
         var status = safeStatus(t.status);
         var row = document.createElement('div');
         row.className = 'ticket-row';
@@ -1535,17 +1824,34 @@ document.addEventListener('DOMContentLoaded', function () {
         appendText(right, 'span', 'status-pill status-' + status, statusLabel[status]);
         row.appendChild(main);
         row.appendChild(right);
-        list.appendChild(row);
-      });
+        return row;
+      }
+
+      if (list) {
+        if (!tickets.length) {
+          list.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg><p>No issues reported yet.</p></div>';
+        } else {
+          list.innerHTML = '';
+          tickets.forEach(function (t) { list.appendChild(buildRow(t)); });
+        }
+      }
+      if (preview) {
+        if (!tickets.length) {
+          preview.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg><p>No issues reported yet.</p></div>';
+        } else {
+          preview.innerHTML = '';
+          tickets.slice(0, 3).forEach(function (t) { preview.appendChild(buildRow(t)); });
+        }
+      }
     }
     renderTickets();
 
-    // New ticket form
+    // New ticket form — persists to this user's record in localStorage
     var ticketForm = document.querySelector('#ticket-form');
     if (ticketForm) {
       ticketForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        var tickets = JSON.parse(sessionStorage.getItem('pt_demo_tickets') || '[]');
+        var tickets = sessionUser.tickets || [];
         var nextNum = 1043 + tickets.length;
         var deviceSel = document.querySelector('#ticket-device');
         var titleInput = document.querySelector('#ticket-title-input');
@@ -1559,32 +1865,31 @@ document.addEventListener('DOMContentLoaded', function () {
         trackEvent('ticket_submit', { ticketId: newTicket.id, device: newTicket.device });
         sendCRMLead('ticket_submit', newTicket);
         tickets.unshift(newTicket);
-        sessionStorage.setItem('pt_demo_tickets', JSON.stringify(tickets));
-        ticketForm.reset();
+        sessionUser.tickets = tickets;
+        ktUpdateUser(sessionUser);
         renderTickets();
+        ticketForm.reset();
         var successMsg = document.querySelector('#ticket-success');
         if (successMsg) {
           successMsg.classList.remove('hidden');
           setTimeout(function () { successMsg.classList.add('hidden'); }, 4000);
         }
-        // switch to tickets tab so the user sees it land in the list
+        ktToast('Issue ' + newTicket.id + ' logged — it will appear under My Issues.');
         var ticketsTabBtn = document.querySelector('.dash-nav button[data-panel="tickets"]');
         if (ticketsTabBtn) ticketsTabBtn.click();
       });
     }
 
-    // Logout
+    // Logout — clears only the session pointer; this user's devices/tickets stay saved for next login
     var logoutBtn = document.querySelector('#logout-btn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', function (e) {
         e.preventDefault();
-        sessionStorage.removeItem('pt_demo_logged_in');
-        sessionStorage.removeItem('pt_demo_tickets');
+        localStorage.removeItem('kt_session_user');
         window.location.href = 'login.html';
       });
     }
   }
-
   // (Old cart system replaced with enhanced version above)
 });
 
