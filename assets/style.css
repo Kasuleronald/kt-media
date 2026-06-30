@@ -135,7 +135,7 @@ p{ margin: 0 0 1em; color: var(--grey); }
   gap:12px;
   flex-shrink:0;
 }
-.brand img{ width:96px; height:46px; }
+.brand img{ width:90px; height:46px; }
 .brand-text{ font-family: var(--font-display); line-height:1; }
 .brand-text .t1{ font-size:1.32rem; font-weight:700; color:var(--navy-deep); letter-spacing:0.01em; }
 .brand-text .t2{ font-size:0.62rem; font-weight:600; color: var(--gold-deep); letter-spacing:0.22em; }
